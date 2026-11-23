@@ -5,17 +5,18 @@ Hướng dẫn này cài hai plugin trên Windows bằng Laragon. Sau khi cài, 
 ## 1. Giải nén Moodle
 
 1. Tải gói ZIP Moodle 5.3, build `20261005`, rồi chọn **Extract All** để giải nén. Bộ file Activity Chooser trong repo đi cùng bản Moodle này. [Tải Moodle 5.3 ZIP](https://download.moodle.org/download.php/stable503/moodle-5.3.zip)
-2. Cài Laragon vào `C:\laragon` nếu máy chưa có. Chuyển thư mục `moodle` vừa giải nén vào `C:\laragon\www`. Kết quả phải có file `C:\laragon\www\moodle\public\index.php`. [Tải Laragon](https://laragon.org/download)
-3. Cài Git for Windows để dùng lệnh `git clone`. Các lệnh bên dưới dùng **PowerShell**. Nếu bạn đặt Laragon ở thư mục khác, sửa các đường dẫn mẫu cho khớp. [Tải Git for Windows](https://git-scm.com/download/win)
+2. Chọn vị trí giải nén tùy ý. Thư mục gốc Moodle là thư mục có `public\index.php` và `admin\cli`. Hướng dẫn dùng `D:\Moodle Lab\moodle` làm ví dụ. Thay đường dẫn này bằng vị trí bạn đã chọn trong các lệnh và cấu hình bên dưới.
+3. Cài Laragon vào `C:\laragon` nếu máy chưa có. Giữ thư mục web mặc định của Laragon là `C:\laragon\www`. Bước 4 sẽ cấu hình riêng địa chỉ `moodle.test` cho bản Moodle vừa giải nén. [Tải Laragon](https://laragon.org/download)
+4. Cài Git for Windows để dùng lệnh `git clone`. Các lệnh bên dưới dùng **PowerShell**. [Tải Git for Windows](https://git-scm.com/download/win)
 
 ## 2. Thay thư mục local bằng repo này
 
-1. Mở `C:\laragon\www\moodle\public` trong File Explorer.
+1. Mở thư mục `public` của bản Moodle vừa giải nén trong File Explorer.
 2. Xóa thư mục `local` **của bản Moodle vừa giải nén**. Thư mục gốc trong ZIP trên có hai file `readme.txt` và `upgrade.txt`. Nếu đang tích hợp vào một Moodle đã có plugin riêng trong `public\local`, giữ thư mục đó và đưa hai thư mục plugin từ một bản clone riêng vào.
 3. Mở PowerShell rồi chạy các lệnh sau để clone repo vào đúng vị trí.
 
 ~~~powershell
-Set-Location -LiteralPath 'C:\laragon\www\moodle\public'
+Set-Location -LiteralPath 'D:\Moodle Lab\moodle\public'
 git clone https://github.com/thongken/local.git local
 Get-Item -LiteralPath '.\local\microlearning\version.php', '.\local\pdfquiz\version.php'
 ~~~
@@ -27,7 +28,7 @@ Sau khi clone, hai đường dẫn phải là `moodle\public\local\microlearning
 Thực hiện bước này trên bản clone đang cài. Lệnh tương đương **Ctrl+X → Ctrl+V** và ghi đè đúng ba file của Moodle. Bộ file lấy từ `microlearning\moodle-core` để hộp **Trắc nghiệm → Thêm** mở đủ lựa chọn thông thường, audio, ghi âm và PDF.
 
 ~~~powershell
-$moodlePublic = 'C:\laragon\www\moodle\public'
+$moodlePublic = 'D:\Moodle Lab\moodle\public'
 $patchRoot = Join-Path $moodlePublic 'local\microlearning\moodle-core\public'
 $coreFiles = @(
     'course\format\amd\src\local\activitychooser\dialogue.js',
@@ -64,14 +65,19 @@ Nhấn **Start All**. Kiểm tra Apache và MySQL đều chạy. Trong **Termina
 
 ### Trỏ moodle.test vào thư mục public
 
-1. Bật **Auto Virtual Hosts** với đuôi `.test` trong phần **Preferences** nếu chưa bật. Nhấn **Reload** để Laragon tạo site `moodle.test`. Bật HTTPS bằng biểu tượng ổ khóa trên Laragon. [Auto Virtual Hosts](https://laragon.org/docs/pretty-urls) · [Auto SSL](https://laragon.org/docs/auto-ssl)
-2. Mở `C:\laragon\etc\apache2\sites-enabled`. Tìm file cấu hình chứa `ServerName moodle.test`. Nếu tên bắt đầu bằng `auto.`, bỏ tiền tố đó để Laragon giữ nội dung bạn sửa.
-3. Trong các khối `<VirtualHost>` của `moodle.test`, cập nhật `DocumentRoot` và `<Directory>` theo mẫu dưới đây. Áp dụng cho cả HTTP và HTTPS. Giữ các dòng SSL do Laragon tạo trong khối cổng `443`. [Cấu trúc thư mục web của Moodle](https://moodledev.io/docs/5.3/guides/restructure)
+1. Bật **Auto SSL** bằng biểu tượng ổ khóa trên Laragon. Dùng **Menu → Apache → SSL → Add laragon.crt to Trust Store** để Windows tin cậy chứng chỉ cục bộ. [Auto SSL của Laragon](https://laragon.org/docs/auto-ssl)
+2. Mở Notepad với quyền quản trị và mở file `C:\Windows\System32\drivers\etc\hosts`. Thêm dòng sau nếu `moodle.test` chưa có trong file.
+
+~~~text
+127.0.0.1 moodle.test
+~~~
+
+3. Tạo file `C:\laragon\etc\apache2\sites-enabled\moodle.test.conf` theo mẫu bên dưới. Thay giá trị `MOODLE_PUBLIC` bằng đường dẫn tới thư mục `public` của bản Moodle vừa giải nén, dùng dấu `/` trong cấu hình Apache. Nếu đã có VirtualHost cho `moodle.test`, sửa các khối hiện có và giữ đường dẫn chứng chỉ riêng nếu đã cấu hình. Với file có tiền tố `auto.`, bỏ tiền tố này trước khi sửa để Laragon giữ cấu hình. [VirtualHost trong Laragon](https://laragon.org/docs/pretty-urls) · [Cấu trúc thư mục web của Moodle](https://moodledev.io/docs/5.3/guides/restructure)
 
 ~~~apache
-DocumentRoot "C:/laragon/www/moodle/public"
+Define MOODLE_PUBLIC "D:/Moodle Lab/moodle/public"
 
-<Directory "C:/laragon/www/moodle/public">
+<Directory "${MOODLE_PUBLIC}">
     Options FollowSymLinks
     AllowOverride None
     Require all granted
@@ -80,9 +86,22 @@ DocumentRoot "C:/laragon/www/moodle/public"
     FallbackResource /r.php
     AddType application/wasm .wasm
 </Directory>
+
+<VirtualHost *:80>
+    ServerName moodle.test
+    DocumentRoot "${MOODLE_PUBLIC}"
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName moodle.test
+    DocumentRoot "${MOODLE_PUBLIC}"
+    SSLEngine on
+    SSLCertificateFile "C:/laragon/etc/ssl/laragon.crt"
+    SSLCertificateKeyFile "C:/laragon/etc/ssl/laragon.key"
+</VirtualHost>
 ~~~
 
-4. Nhấn **Reload**. Nếu trình duyệt báo chứng chỉ chưa được tin cậy, chọn **Menu → Apache → SSL → Add laragon.crt to Trust Store**, rồi mở lại `https://moodle.test`. HTTPS cho phép trình duyệt cấp quyền micro trên địa chỉ này. [Tin cậy chứng chỉ Laragon](https://laragon.org/docs/auto-ssl#add-laragoncrt-to-trust-store)
+4. Nhấn **Reload** trong Laragon rồi mở `https://moodle.test`. HTTPS cho phép trình duyệt cấp quyền micro trên địa chỉ này.
 
 ### Tạo cơ sở dữ liệu và chạy trình cài đặt
 
@@ -92,26 +111,26 @@ DocumentRoot "C:/laragon/www/moodle/public"
 CREATE DATABASE moodle53 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ~~~
 
-2. Tạo thư mục `C:\laragon\moodledata-moodle53` bằng File Explorer. Đây là nơi Moodle lưu tệp tải lên và dữ liệu chạy. Đặt thư mục này ngoài thư mục web. [Thư mục dữ liệu Moodle](https://docs.moodle.org/503/en/Installing_Moodle)
+2. Tạo thư mục dữ liệu ngoài các thư mục web, ví dụ `D:\Moodle Lab\moodledata` đặt cạnh thư mục `moodle`. Đây là nơi Moodle lưu tệp tải lên và dữ liệu chạy. Nếu chọn vị trí khác, dùng đúng vị trí đó trong trình cài và các lệnh Python bên dưới. [Thư mục dữ liệu Moodle](https://docs.moodle.org/503/en/Installing_Moodle)
 3. Mở **https://moodle.test** và đi qua trình cài đặt. Chọn trình điều khiển **MySQL (mysqli)** và dùng các giá trị dưới đây.
 
 | Mục | Giá trị mẫu |
 | --- | --- |
 | Địa chỉ web | `https://moodle.test` |
-| Thư mục dữ liệu | `C:\laragon\moodledata-moodle53` |
+| Thư mục dữ liệu | `D:\Moodle Lab\moodledata` |
 | Máy chủ cơ sở dữ liệu | `127.0.0.1` |
 | Cổng MySQL | `3306` |
 | Tên cơ sở dữ liệu | `moodle53` |
 | Tên đăng nhập và mật khẩu | Tài khoản MySQL đã dùng để kết nối HeidiSQL |
 | Tiền tố bảng | `mdl_` |
 
-4. Moodle tạo `C:\laragon\www\moodle\config.php` từ thông tin bạn điền. Nếu hiện màn hình yêu cầu lưu thủ công, dùng nội dung mà trình cài cung cấp để tạo `config.php` tại vị trí đó, rồi tải lại trang.
+4. Moodle tạo `config.php` ở thư mục gốc Moodle, ví dụ `D:\Moodle Lab\moodle\config.php`. Nếu trình cài yêu cầu lưu thủ công, lưu nội dung được cung cấp vào vị trí đó rồi tải lại trang.
 5. Tạo tài khoản quản trị và đặt tên site. Trong **Quản trị hệ thống → Thông báo** (**Site administration → Notifications**), hoàn tất cài **Microlearning** và **PDF Quiz AI** nếu Moodle còn hiện bước cập nhật plugin.
 
 Sau khi cài hoàn tất, xóa cache Moodle từ Terminal của Laragon. Với site đã cài Moodle trước đó, chạy thêm `php .\admin\cli\upgrade.php` trước lệnh xóa cache để Moodle cài hoặc nâng cấp plugin.
 
 ~~~powershell
-Set-Location -LiteralPath 'C:\laragon\www\moodle'
+Set-Location -LiteralPath 'D:\Moodle Lab\moodle'
 php .\admin\cli\purge_caches.php
 ~~~
 
@@ -119,15 +138,15 @@ Trở lại trình duyệt và nhấn **Ctrl+F5**.
 
 ## 5. Khởi động hai dịch vụ Python
 
-Cài **Python 3.13 x64** và cho phép trình cài thêm Python vào `PATH`. Mở PowerShell mới và kiểm tra bằng `python --version`. Mỗi dịch vụ có môi trường Python riêng trong `moodledata-moodle53`. Giữ cửa sổ của dịch vụ mở trong khi dùng tính năng tương ứng. [Tải Python cho Windows](https://www.python.org/downloads/windows/)
+Cài **Python 3.13 x64** và cho phép trình cài thêm Python vào `PATH`. Mở PowerShell mới và kiểm tra bằng `python --version`. Mỗi dịch vụ có môi trường Python riêng trong thư mục dữ liệu đã chọn ở bước 4. Giữ cửa sổ của dịch vụ mở trong khi dùng tính năng tương ứng. [Tải Python cho Windows](https://www.python.org/downloads/windows/)
 
 ### PDF Quiz AI trên cổng 8002
 
 Mở một cửa sổ PowerShell và chạy khối lệnh sau. Khi cần bật lại dịch vụ, chạy lại hai dòng gán đường dẫn và dòng chạy `server.py`.
 
 ~~~powershell
-$pdfService = 'C:\laragon\www\moodle\public\local\pdfquiz\python_service'
-$pdfVenv = 'C:\laragon\moodledata-moodle53\pdfquiz-service\venv'
+$pdfService = 'D:\Moodle Lab\moodle\public\local\pdfquiz\python_service'
+$pdfVenv = 'D:\Moodle Lab\moodledata\pdfquiz-service\venv'
 python -m venv $pdfVenv
 & "$pdfVenv\Scripts\python.exe" -m pip install -r "$pdfService\requirements.txt"
 & "$pdfVenv\Scripts\python.exe" "$pdfService\server.py"
@@ -153,8 +172,8 @@ $generator.Dispose()
 2. Mở cửa sổ PowerShell thứ hai. Cài môi trường một lần bằng khối lệnh sau.
 
 ~~~powershell
-$speechEngine = 'C:\laragon\www\moodle\public\local\microlearning\engine'
-$speechRuntime = 'C:\laragon\moodledata-moodle53\microlearning-speech'
+$speechEngine = 'D:\Moodle Lab\moodle\public\local\microlearning\engine'
+$speechRuntime = 'D:\Moodle Lab\moodledata\microlearning-speech'
 $speechVenv = Join-Path $speechRuntime 'venv'
 python -m venv $speechVenv
 & "$speechVenv\Scripts\python.exe" -m pip install -r "$speechEngine\requirements.txt"
@@ -195,11 +214,11 @@ Tạo một khóa học mẫu. Dùng tài khoản giảng viên có quyền ch�
 4. Giữ dịch vụ giọng đọc chạy. Khi bài hiện **Đang chờ Moodle cron**, mở Terminal Laragon và chạy lệnh dưới đây để Moodle xử lý hàng đợi. Sau đó chọn **Làm mới trạng thái** để nghe hoặc tải WAV.
 
 ~~~powershell
-Set-Location -LiteralPath 'C:\laragon\www\moodle'
+Set-Location -LiteralPath 'D:\Moodle Lab\moodle'
 php .\admin\cli\cron.php
 ~~~
 
-Khi chạy Moodle thường xuyên, dùng **Windows Task Scheduler** để gọi `php.exe` với đối số `C:\laragon\www\moodle\admin\cli\cron.php` mỗi phút. Chọn đúng file `php.exe` của phiên bản PHP đang dùng trong Laragon. [Cấu hình Moodle cron](https://docs.moodle.org/503/en/Cron)
+Khi chạy Moodle thường xuyên, dùng **Windows Task Scheduler** để gọi `php.exe` với đường dẫn đến `admin\cli\cron.php` trong thư mục Moodle đã chọn mỗi phút. Ví dụ điền `"D:\Moodle Lab\moodle\admin\cli\cron.php"` vào ô đối số, gồm cả dấu nháy vì đường dẫn có khoảng trắng. Chọn đúng file `php.exe` của phiên bản PHP đang dùng trong Laragon. [Cấu hình Moodle cron](https://docs.moodle.org/503/en/Cron)
 
 ## 7. Khởi động lại và xử lý lỗi thường gặp
 
@@ -207,7 +226,7 @@ Khi mở lại máy, nhấn **Start All** trong Laragon, vào `https://moodle.te
 
 | Hiện tượng | Kiểm tra |
 | --- | --- |
-| `moodle.test` mở sai trang hoặc thiếu CSS | Xem lại `DocumentRoot` của cả HTTP và HTTPS, rồi **Reload** Apache. |
+| `moodle.test` không mở được, mở sai trang hoặc thiếu CSS | Kiểm tra dòng `127.0.0.1 moodle.test` trong file `hosts` và đường dẫn `MOODLE_PUBLIC` trong cấu hình Apache, rồi nhấn **Reload** trong Laragon. |
 | **Trắc nghiệm → Thêm** đi thẳng vào form mặc định | Kiểm tra cả ba file ở bước 3, chạy `purge_caches.php` rồi nhấn **Ctrl+F5**. |
 | Sinh viên thiếu mục **AI hỗ trợ học tập** | Kiểm tra tài khoản đã ghi danh với vai trò sinh viên và hai plugin đã cài xong. |
 | Trình duyệt chưa dùng được micro | Mở `https://moodle.test` bằng chứng chỉ đã tin cậy và cấp quyền micro cho site. |
