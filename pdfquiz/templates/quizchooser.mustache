@@ -1,0 +1,19 @@
+{{!
+    @template local_pdfquiz/quizchooser
+    @description Choose between standard Moodle Quiz creation and PDF AI Quiz creation.
+    @example {"help":"Choose a method","choices":[{"label":"From PDF file","description":"Upload a new PDF file or choose an existing PDF file.","url":"#"}]}
+}}
+<p class="text-muted mb-4">{{help}}</p>
+<div class="row g-3 pb-3">
+    {{#choices}}
+    <div class="col-12 col-md-6">
+        <a href="{{url}}" class="card h-100 text-decoration-none text-body border-primary">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{label}}</h5>
+                <p class="card-text">{{description}}</p>
+            </div>
+        </a>
+    </div>
+    {{/choices}}
+</div>
+

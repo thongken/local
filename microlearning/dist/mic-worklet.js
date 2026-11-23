@@ -1,0 +1,1 @@
+var t=class extends AudioWorkletProcessor{constructor(){super(),this.buf=new Float32Array(4096),this.n=0}process(r){let s=r[0]&&r[0][0];return s&&(this.buf.set(s,this.n),this.n+=s.length,this.n>=this.buf.length&&(this.port.postMessage(this.buf,[this.buf.buffer]),this.buf=new Float32Array(4096),this.n=0)),!0}};registerProcessor("mic-capture",t);

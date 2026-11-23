@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Logs and temporary files
+*.log
+*.tmp
+.cache/
+coverage/
+
+# Editor and operating system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

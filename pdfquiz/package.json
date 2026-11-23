@@ -1,0 +1,13 @@
+{
+  "name": "local-pdfquiz-amd",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:amd": "node build-amd.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
+

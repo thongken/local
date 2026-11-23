@@ -1,0 +1,18 @@
+.pdfquiz-app {
+    max-width: 920px;
+}
+.pdfquiz-app .pdfquiz-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.pdfquiz-app .pdfquiz-option-correct {
+    font-weight: 600;
+    color: #198754;
+}
+.pdfquiz-app .pdfquiz-refine-bar {
+    background-color: #f8fbff;
+}
+.pdfquiz-app .pdfquiz-chip {
+    font-size: 0.8rem;
+}

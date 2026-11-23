@@ -1,0 +1,22 @@
+# Web service wrapper
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-multipart>=0.0.12
+
+# PDF Processing (Process-PDF)
+PyMuPDF>=1.25.0
+pdfplumber>=0.11.0
+
+# Image Processing
+opencv-python-headless>=4.10.0
+numpy>=1.26.0
+Pillow>=11.0.0
+
+# AI Integration & Chunking
+litellm>=1.50.0
+langchain-text-splitters>=0.3.0
+python-dotenv>=1.0.0
+
+# Selective OCR (optional if Tesseract-OCR binary is installed)
+pytesseract>=0.3.10
+

@@ -1,0 +1,18 @@
+{{!
+    @template local_microlearning/quizchooser
+    @description Ways to create a native Moodle quiz.
+    @example {"help":"Choose a method","choices":[{"label":"Audio","description":"Upload audio","url":"#"}]}
+}}
+<p class="text-muted mb-4">{{help}}</p>
+<div class="row g-3 pb-3">
+    {{#choices}}
+    <div class="col-12 col-md-4">
+        <a href="{{url}}" class="card h-100 text-decoration-none text-body border-primary">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{label}}</h5>
+                <p class="card-text">{{description}}</p>
+            </div>
+        </a>
+    </div>
+    {{/choices}}
+</div>
