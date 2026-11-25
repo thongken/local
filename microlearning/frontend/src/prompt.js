@@ -27,9 +27,11 @@ export function buildUserPrompt(parts, { previous = null, feedback = '', questio
       + questionAllocation(parts, questionCount).map((count, index) => `phần ${index + 1}: ${count} câu`).join('; ')
       + '. Không dùng số câu mặc định. Nếu nguồn quá ít thông tin, không bịa thêm kiến thức ngoài nguồn.';
   }
-  if (previous) {
+    if (previous) {
     out += `\n\n=== KẾT QUẢ TRƯỚC ĐÓ (cần chỉnh lại) ===\n${JSON.stringify(previous)}`;
     out += `\n\n=== PHẢN HỒI CỦA NGƯỜI DÙNG ===\n${String(feedback).slice(0, 2000)}\nHãy tạo lại kết quả mới theo phản hồi trên, vẫn tuân thủ mọi quy tắc.`;
+  } else if (feedback) {
+    out += `\n\nYÊU CẦU THÊM TỪ GIẢNG VIÊN:\n${String(feedback).slice(0, 2000)}`;
   }
   return out;
 }
