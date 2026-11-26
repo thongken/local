@@ -47,12 +47,13 @@ class CourseQuiz {
     this.progress = new ProgressView(this.progressHost);
     this.error = el('div', {role: 'alert', tabindex: '-1'});
     this.result = el('div', {'aria-live': 'polite'});
-    this.process = button('Tạo trắc nghiệm', () => this.run());
+    this.process = button('Sinh câu hỏi', () => this.run());
     this.cancel = button('Hủy xử lý', () => this.controller?.abort(), 'outline-secondary');
     this.cancel.classList.add('d-none');
+    const sourceCard = this.opts.kind === 'audio' ? this.audioCard() : this.recordCard();
     this.form = el('form', {}, [
-      card('1. Thiết lập bài trắc nghiệm', [field('Tên bài trắc nghiệm', this.title), field('Số câu hỏi (1–30)', this.count)]),
-      this.opts.kind === 'audio' ? this.audioCard() : this.recordCard(),
+      sourceCard,
+      card('2. Thiết lập bài trắc nghiệm', [field('Tên bài trắc nghiệm', this.title), field('Số câu hỏi (1–30)', this.count)]),
       card('3. Ghi chú cho AI (tuỳ chọn)', [field('Yêu cầu thêm (ví dụ: câu hỏi khó hơn, tập trung vào phần X)', this.note)]),
       card('4. Kết nối AI', [field(S.apiKeyLabel, this.apiKey), el('p', {class: 'form-text'}, S.apiKeyHelp),
         el('div', {class: 'form-check mb-2'}, [this.remember,
@@ -88,7 +89,7 @@ class CourseQuiz {
         if (!this.title.value.trim()) this.title.value = 'Trắc nghiệm — ' + file.name.replace(/\.[^.]+$/, '');
       } catch (error) { this.showError(error.message); }
     });
-    return card('2. Chọn nguồn tài liệu', [field('Nguồn tạo câu hỏi', this.source), fileField,
+    return card('1. Chọn nguồn tài liệu', [field('Nguồn tạo câu hỏi', this.source), fileField,
       el('p', {class: 'form-text'}, `Hỗ trợ MP3, WAV, M4A, OGG; tối đa ${Math.floor(this.opts.maxFileBytes / 1024 / 1024)} MB và 30 phút. PDF/MP4 chưa được hỗ trợ.`),
       el('p', {class: 'form-text'}, 'Có thể chọn bất kỳ audio hợp lệ trong các tài nguyên File của khóa học, kể cả tệp đính kèm không phải file chính.'),
     ]);
@@ -105,8 +106,10 @@ class CourseQuiz {
       el('span', {class: 'ml-mic-dot', 'aria-hidden': 'true'}), this.micLabel,
     ]);
     this.recordStatus = el('p', {class: 'form-text mb-0'}, 'Đang kết nối micro…');
-    return card('2. Ghi âm nội dung bài học', [this.micIndicator, this.micMeter,
-      this.recordStatus, this.record]);
+    this.process.disabled = true;
+    return card('1. Ghi âm nội dung bài học', [this.micIndicator, this.micMeter,
+      this.recordStatus, this.record,
+      el('p', {class: 'form-text mt-2'}, 'Ghi âm xong, điền thông tin bên dưới rồi bấm "Sinh câu hỏi".')]);
   }
 
   setMicState(state, label) {
@@ -157,12 +160,12 @@ class CourseQuiz {
       else this.pipeline?.feed(part);
     }
     this.recordStatus.textContent = `Đang ghi ${Math.floor(this.sampleCount / SAMPLE_RATE)} giây / ${this.opts.maxSeconds} giây.`;
-    if (this.sampleCount >= this.opts.maxSeconds * SAMPLE_RATE) this.stopRecording(true);
+        if (this.sampleCount >= this.opts.maxSeconds * SAMPLE_RATE) this.stopRecording();
   }
 
   async toggleMic() {
     if (this.busy) return;
-    if (this.recording) { this.stopRecording(true); return; }
+    if (this.recording) { this.stopRecording(); return; }
     if (this.micStarting) return;
     if (!this.mic) {
       this.showError('Micro chưa sẵn sàng. Hãy cấp quyền truy cập micro cho trang này.');
@@ -172,6 +175,7 @@ class CourseQuiz {
     this.pipeline?.cancel();
     this.pipeline = null; this.pipelineReady = null; this.pipelineFinish = null;
     this.pipelineQueue = []; this.recording = true; this.micStarting = true;
+    this.process.disabled = true;
     this.record.textContent = 'Dừng ghi âm';
     this.recordStatus.textContent = 'Đang ghi 0 giây…';
     this.setMicState('recording', 'Micro đang hoạt động · ĐANG GHI');
@@ -203,7 +207,7 @@ class CourseQuiz {
     }
   }
 
-  stopRecording(autoProcess = false) {
+  stopRecording() {
     if (this.recording) this.recording = false;
     if (this.pipeline && !this.pipelineFinish) {
       const pipeline = this.pipeline, ready = this.pipelineReady;
@@ -211,12 +215,9 @@ class CourseQuiz {
       this.pipelineFinish.catch(() => {});
     }
     if (this.record) this.record.textContent = this.sampleCount ? 'Ghi lại từ đầu' : 'Bắt đầu ghi âm';
-    if (this.recordStatus) this.recordStatus.textContent = `Đã ghi ${Math.floor(this.sampleCount / SAMPLE_RATE)} giây. Micro vẫn đang hoạt động.`;
+    if (this.recordStatus) this.recordStatus.textContent = `Đã ghi ${Math.floor(this.sampleCount / SAMPLE_RATE)} giây. Micro vẫn đang hoạt động. Điền thông tin bên dưới rồi bấm "Sinh câu hỏi".`;
     if (this.mic) this.setMicState('recording', 'Micro đang hoạt động');
-    if (autoProcess) {
-      if (this.micStarting && this.pipelineReady) this.pipelineReady.then(() => setTimeout(() => this.run(), 0));
-      else this.run();
-    }
+    if (this.process) this.process.disabled = !this.sampleCount;
   }
 
   showError(message) {
@@ -276,6 +277,10 @@ class CourseQuiz {
 
   async run() {
     if (this.busy || this.created || this.quizDraft || this.micStarting) return;
+    if (this.opts.kind === 'record' && this.recording) {
+      this.showError('Hãy bấm "Dừng ghi âm" trước khi sinh câu hỏi.');
+      return;
+    }
     this.showError('');
     const title = this.title.value.trim(), count = Number(this.count.value), apiKey = this.apiKey.value.trim();
     if (!title) return this.showError('Hãy nhập tên bài trắc nghiệm.');
